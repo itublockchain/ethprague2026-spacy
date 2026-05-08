@@ -35,6 +35,15 @@
       "arrowParentheses": "always"
     }
   },
+  "css": {
+    "parser": {
+      "cssModules": true,
+      "tailwindDirectives": true
+    },
+    "linter": {
+      "enabled": false
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
