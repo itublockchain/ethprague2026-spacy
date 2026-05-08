@@ -7,6 +7,7 @@ export const privyConfig: PrivyClientConfig = {
     ethereum: {
       createOnLogin: 'users-without-wallets',
     },
+    showWalletUIs: false,
   },
   defaultChain: sepolia,
   supportedChains: [sepolia],

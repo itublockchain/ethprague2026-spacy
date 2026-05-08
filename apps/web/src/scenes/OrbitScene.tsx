@@ -1,13 +1,14 @@
 import { useGSAP } from '@gsap/react'
 import { Canvas } from '@react-three/fiber'
 import gsap from 'gsap'
-import { useRef } from 'react'
+import { Suspense, useRef } from 'react'
 import type { Group } from 'three'
 import { OrbitPath } from './objects/OrbitPath'
 import { Satellite } from './objects/Satellite'
+import { Starfield } from './objects/Starfield'
 
-const ELLIPSE_A = 6.5
-const ELLIPSE_B = 2.4
+const ELLIPSE_A = 4.5
+const ELLIPSE_B = 1.7
 const ROTATION = -0.38
 const PERIOD = 18
 
@@ -29,6 +30,12 @@ function OrbitingSatellite() {
         const x = ELLIPSE_A * Math.cos(obj.t)
         const y = ELLIPSE_B * Math.sin(obj.t)
         ref.current.position.set(x * cosA - y * sinA, x * sinA + y * cosA, 0)
+
+        const vx = -ELLIPSE_A * Math.sin(obj.t)
+        const vy = ELLIPSE_B * Math.cos(obj.t)
+        const vxRot = vx * cosA - vy * sinA
+        const vyRot = vx * sinA + vy * cosA
+        ref.current.rotation.z = Math.atan2(vyRot, vxRot) - Math.PI / 2
       },
     })
   }, [])
@@ -45,9 +52,13 @@ export function OrbitScene() {
         frameloop="always"
         gl={{ antialias: true, alpha: true }}
       >
-        <ambientLight intensity={0.3} />
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[5, 4, 5]} intensity={0.8} />
+        <Starfield count={2000} radius={30} />
         <OrbitPath />
-        <OrbitingSatellite />
+        <Suspense fallback={null}>
+          <OrbitingSatellite />
+        </Suspense>
       </Canvas>
     </div>
   )

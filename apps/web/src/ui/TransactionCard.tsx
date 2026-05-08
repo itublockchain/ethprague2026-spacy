@@ -76,7 +76,14 @@ export function TransactionCard({
 
         <SendButton state={state} onSend={onSend} />
 
-        {errorMessage ? <div className="text-[14px] text-terracotta">{errorMessage}</div> : null}
+        {errorMessage ? (
+          <div className="flex items-start gap-2 rounded-md border border-terracotta/40 bg-terracotta/10 px-3 py-2 text-[13px] text-terracotta">
+            <span aria-hidden="true" className="mt-px font-medium">
+              !
+            </span>
+            <span className="leading-snug">{errorMessage}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   )

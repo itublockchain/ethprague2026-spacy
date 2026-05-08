@@ -11,7 +11,7 @@ const phaseLabel: Record<Exclude<SendState['status'], 'confirmed'>, string> = {
   idle: `Send ${DEMO_AMOUNT_ETH} ETH`,
   authorizing: 'Authorizing',
   'orbital-signing': 'Signing in orbit',
-  'ground-signing': 'Signing on ground',
+  'ground-signing': 'Co-signing',
   broadcasting: 'Broadcasting',
   failed: 'Try again',
 }
@@ -27,7 +27,7 @@ export function SendButton({ state, onSend }: SendButtonProps) {
         href={`${SEPOLIA_EXPLORER}/tx/${state.hash}`}
         target="_blank"
         rel="noreferrer"
-        className="block w-full rounded-md bg-aurora py-3 text-center text-[14px] font-medium text-cosmos transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost"
+        className="block w-full cursor-pointer rounded-md bg-aurora py-3 text-center text-[14px] font-medium text-cosmos transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost"
       >
         View tx {truncateHash(state.hash)} ↗
       </a>
@@ -55,7 +55,7 @@ export function SendButton({ state, onSend }: SendButtonProps) {
       animate={isFailed ? { x: [0, -4, 4, -4, 4, 0] } : { x: 0 }}
       transition={{ duration: 0.32, ease: 'easeOut' }}
       aria-live="polite"
-      className={`w-full rounded-md py-3 text-[14px] font-medium transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost disabled:cursor-default ${stateClasses}`}
+      className={`w-full cursor-pointer rounded-md py-3 text-[14px] font-medium transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost disabled:cursor-default ${stateClasses}`}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span

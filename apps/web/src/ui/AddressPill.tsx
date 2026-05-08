@@ -29,7 +29,7 @@ export function AddressPill({ address }: AddressPillProps) {
         void onCopy()
       }}
       style={{ fontVariantNumeric: 'tabular-nums' }}
-      className={`inline-flex items-center rounded-sm border border-dusk/30 px-3 py-1.5 text-[12px] tracking-[0.02em] text-starlight transition-colors duration-200 hover:border-dusk/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost ${
+      className={`inline-flex cursor-pointer items-center rounded-sm border border-dusk/30 px-3 py-1.5 text-[12px] tracking-[0.02em] text-starlight transition-colors duration-200 hover:border-dusk/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost ${
         copied ? 'bg-aurora/20' : 'bg-cosmos'
       }`}
     >

@@ -1,8 +1,8 @@
 import { Line } from '@react-three/drei'
 import { useMemo } from 'react'
 
-const ELLIPSE_A = 6.5
-const ELLIPSE_B = 2.4
+const ELLIPSE_A = 4.5
+const ELLIPSE_B = 1.7
 const ROTATION = -0.38
 const STEPS = 128
 

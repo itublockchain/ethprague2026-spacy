@@ -1,10 +1,10 @@
-import { Float } from '@react-three/drei'
+import { Float, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import type { SendState } from '@spacy/types'
 import gsap from 'gsap'
-import { useEffect, useRef } from 'react'
+import { motion } from 'motion/react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Color, type Group, Mesh, MeshStandardMaterial } from 'three'
-import { Planet } from './objects/Planet'
 import { Satellite } from './objects/Satellite'
 
 interface WalletSceneProps {
@@ -12,8 +12,56 @@ interface WalletSceneProps {
 }
 
 const AURORA = '#6FA88F'
-const SAT_BASE = '#E8B65A'
-const PLANET_BASE = '#1a1f24'
+const SAT_BASE = '#000000'
+
+const HEX = '0123456789abcdef'
+
+interface ScrambleLine {
+  text: string
+  tone: string
+}
+
+function generateLines(): ScrambleLine[] {
+  return Array.from({ length: 5 }, () => {
+    const len = 14 + Math.floor(Math.random() * 12)
+    let s = '0x'
+    for (let i = 0; i < len; i++) {
+      s += HEX.charAt(Math.floor(Math.random() * 16))
+    }
+    const roll = Math.random()
+    const tone = roll > 0.85 ? 'text-aurora/70' : roll > 0.7 ? 'text-frost/55' : 'text-amber/65'
+    return { text: s, tone }
+  })
+}
+
+function ScrambleOverlay({ active }: { active: boolean }) {
+  const [lines, setLines] = useState<ScrambleLine[]>(generateLines)
+
+  useEffect(() => {
+    setLines(generateLines())
+    if (!active) return
+    const id = setInterval(() => {
+      setLines(generateLines())
+    }, 350)
+    return () => clearInterval(id)
+  }, [active])
+
+  return (
+    <motion.div
+      className="pointer-events-none absolute inset-0 flex select-none flex-col items-center justify-center gap-1.5 font-mono text-[14px]"
+      initial={false}
+      animate={{ opacity: active ? 0.95 : 0 }}
+      transition={{ duration: 1.4, ease: 'easeInOut' }}
+      aria-hidden="true"
+    >
+      {lines.map((line) => (
+        <span key={line.text} className={line.tone} style={{ letterSpacing: '0.06em' }}>
+          {line.text}
+        </span>
+      ))}
+    </motion.div>
+  )
+}
 
 function useEmissiveShift(
   groupRef: React.RefObject<Group | null>,
@@ -40,44 +88,64 @@ function useEmissiveShift(
 
 export function WalletScene({ state }: WalletSceneProps) {
   const satRef = useRef<Group>(null)
-  const planetRef = useRef<Group>(null)
 
-  const orbitalActive =
+  const satActive =
     state.status === 'orbital-signing' ||
     state.status === 'ground-signing' ||
     state.status === 'broadcasting'
-  const groundActive = state.status === 'ground-signing' || state.status === 'broadcasting'
 
-  useEmissiveShift(satRef, orbitalActive, SAT_BASE)
-  useEmissiveShift(planetRef, groundActive, PLANET_BASE)
+  const obscured = state.status === 'idle' || state.status === 'failed'
+
+  useEmissiveShift(satRef, satActive, SAT_BASE)
 
   return (
-    <div
-      className="pointer-events-none h-[60vh] w-full"
-      style={{ filter: 'blur(28px) saturate(1.1)' }}
-      aria-hidden="true"
-    >
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 35 }}
-        dpr={[1, 1.5]}
-        frameloop="always"
-        gl={{ antialias: true, alpha: true }}
-      >
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[5, 5, 5]} intensity={0.6} />
-        <directionalLight position={[-5, 0, -3]} intensity={0.3} color="#DCE4EC" />
+    <div className="relative mx-auto w-full max-w-[760px]">
+      <motion.div
+        className="pointer-events-none absolute -inset-16"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(111,168,143,0.45), transparent 65%)',
+          filter: 'blur(48px)',
+        }}
+        initial={false}
+        animate={{ opacity: satActive ? 1 : 0 }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
+        aria-hidden="true"
+      />
 
-        <Float speed={1.6} rotationIntensity={0.25} floatIntensity={0.4}>
-          <group ref={satRef} position={[-2.5, 0, 0]}>
-            <Satellite scale={1.4} />
-          </group>
-        </Float>
-        <Float speed={1} rotationIntensity={0.1} floatIntensity={0.3}>
-          <group ref={planetRef} position={[2.5, 0, 0]}>
-            <Planet />
-          </group>
-        </Float>
-      </Canvas>
+      <motion.div
+        className="relative h-[320px] w-full"
+        animate={{
+          filter: obscured ? 'blur(26px) saturate(1.1)' : 'blur(0px) saturate(1.05)',
+        }}
+        transition={{ duration: 1.4, ease: 'easeInOut' }}
+      >
+        <Canvas
+          camera={{ position: [0, 0, 3.4], fov: 35 }}
+          dpr={[1, 1.5]}
+          frameloop="always"
+          gl={{ antialias: true, alpha: true }}
+        >
+          <ambientLight intensity={0.4} />
+          <directionalLight position={[5, 5, 5]} intensity={0.6} />
+          <directionalLight position={[-5, 0, -3]} intensity={0.3} color="#DCE4EC" />
+          <Suspense fallback={null}>
+            <Float speed={1.6} rotationIntensity={0.18} floatIntensity={0.25}>
+              <group ref={satRef}>
+                <Satellite scale={1} />
+              </group>
+            </Float>
+          </Suspense>
+          <OrbitControls
+            enablePan={false}
+            enableZoom={false}
+            enableDamping
+            dampingFactor={0.08}
+            rotateSpeed={0.55}
+          />
+        </Canvas>
+      </motion.div>
+
+      <ScrambleOverlay active={obscured} />
     </div>
   )
 }
