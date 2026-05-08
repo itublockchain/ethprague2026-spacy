@@ -1,0 +1,12 @@
+{
+  "name": "@spacy/contracts",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "fmt": "forge fmt",
+    "deploy:sepolia": "forge script script/Deploy.s.sol --rpc-url sepolia --broadcast --verify",
+    "clean": "forge clean && rm -rf .turbo"
+  }
+}

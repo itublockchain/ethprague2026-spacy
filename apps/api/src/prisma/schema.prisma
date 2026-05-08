@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  googleSub   String   @unique
+  email       String   @unique
+  name        String?
+  createdAt   DateTime @default(now())
+  lastLoginAt DateTime @default(now()) @updatedAt
+
+  wallet Wallet?
+
+  @@index([googleSub])
+}
+
+model Wallet {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  kmsKeyId String @unique
+  address  String @unique
+
+  provisioningEntropyHash     String
+  provisioningEntropySig      String
+  provisioningSatelliteSource String @default("aptosorbital")
+
+  createdAt DateTime @default(now())
+
+  transactions Transaction[]
+
+  @@index([address])
+}
+
+model Transaction {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  txHash   String  @unique
+  chainId  Int
+  status   String  @default("pending")
+  rawTxHex String?
+
+  createdAt   DateTime  @default(now())
+  confirmedAt DateTime?
+
+  attestation Attestation?
+
+  @@index([walletId, createdAt(sort: Desc)])
+  @@index([txHash])
+}
+
+model Attestation {
+  id          String      @id @default(uuid())
+  txHash      String      @unique
+  transaction Transaction @relation(fields: [txHash], references: [txHash], onDelete: Cascade)
+
+  ipfsCid    String? @unique
+  publicSlug String  @unique @default(cuid())
+
+  kmsQuote           Json
+  kmsQuoteVerified   Boolean @default(false)
+  signingEntropyHash String
+  signingEntropySig  String
+
+  onchainTxHash      String?
+  onchainBlockNumber Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([publicSlug])
+  @@index([ipfsCid])
+}

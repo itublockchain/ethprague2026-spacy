@@ -16,7 +16,8 @@
       "!**/build",
       "!**/coverage",
       "!**/bun.lock",
-      "!**/*.gen.ts"
+      "!**/*.gen.ts",
+      "!**/scripts"
     ]
   },
   "formatter": {

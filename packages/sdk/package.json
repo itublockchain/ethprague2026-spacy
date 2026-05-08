@@ -1,5 +1,5 @@
 {
-  "name": "@spacy/types",
+  "name": "@spacy/sdk",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,16 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo"
   },
+  "dependencies": {
+    "@spacy/shared": "workspace:*",
+    "viem": "^2.21.0"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0 || ^19.0.0"
+  },
   "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
     "typescript": "^5.7.0"
   }
 }

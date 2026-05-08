@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: spacy
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+      POSTGRES_DB: spacy
+    volumes:
+      - /var/lib/spacy/postgres:/var/lib/postgresql/data
+    secrets:
+      - pg_password
+    restart: always
+
+  api:
+    image: ghcr.io/spacy-computer/api:latest
+    env_file: /etc/spacy/api.env
+    depends_on:
+      - postgres
+    ports:
+      - "127.0.0.1:8080:8080"
+    devices:
+      - /dev/sev-guest:/dev/sev-guest
+    restart: always
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /var/lib/spacy/caddy:/data
+    depends_on:
+      - api
+    restart: always
+
+secrets:
+  pg_password:
+    file: /etc/spacy/pg_password
