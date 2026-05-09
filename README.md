@@ -1,4 +1,6 @@
-# Spacy — Sign in with Google. Sign across orbit. Verifiable cosmic entropy.
+# Spacy
+
+Sign in with Google. Sign across orbit. Verifiable cosmic entropy.
 
 ## The Problem
 
@@ -68,7 +70,6 @@ sequenceDiagram
 
 | | Privy | Dynamic | **Spacy** |
 |---|---|---|---|
-| **Seed phrase to manage** | No | No | **No** |
 | **Who sees the private key** | Vendor's MPC nodes | Vendor's MPC nodes | **Intel TDX silicon — nobody** |
 | **Attestation of running code** | Marketing copy | Marketing copy | **TDX + SEV-SNP quotes embedded in every receipt** |
 | **Entropy auditability** | Vendor's RNG (trust us) | Vendor's RNG (trust us) | **Satellite-signed cTRNG witness per signature** |
@@ -364,7 +365,6 @@ cd packages/contracts && forge test        # Run the SpacyAttestations tests
 - [Web App](https://spacy.computer/)
 - [SDK on npm](https://www.npmjs.com/package/@spacy-computer/sdk)
 - [SDK Docs](./docs/README.md)
-- [Public verification walkthrough](https://spacy.computer/verify)
 - [Attestation contract on Ethereum Mainnet](https://etherscan.io/address/0xCe31398be624975941e71F94eC6D4c5472449B00)
 - [SpaceComputer Orbitport](https://spacecomputer.io/)
 - [Intel TDX](https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/overview.html)
@@ -376,4 +376,7 @@ cd packages/contracts && forge test        # Run the SpacyAttestations tests
 
 ## Team
 
-Built by [ITU Blockchain](https://x.com/ITUBlockchainen) at **ETHPrague 2026**.
+- [Feyyaz Numan Cavlak](https://x.com/feyyazcigim)
+- [Barış Bice](https://x.com/0xbaris_)
+
+Built by [ITU Blockchain](https://x.com/ITUBlockchainen) at ETHPrague 2026.
