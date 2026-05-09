@@ -1,4 +1,55 @@
+{
+  email team@spacy.computer
+}
+
+# Backend API — reverse proxy to the api container.
 api.spacy.computer {
-    encode zstd gzip
-    reverse_proxy api:8080
+  encode zstd gzip
+
+  reverse_proxy api:8080
+
+  log {
+    output file /data/api.log
+    format json
+  }
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+}
+
+# Frontend SPA — static files baked by `bun run --filter @spacy/web build`.
+# `try_files` falls back to index.html so client-side routes (/proof/:slug etc.)
+# resolve cleanly without 404s.
+spacy.computer, www.spacy.computer {
+  encode zstd gzip
+  root * /srv/web
+
+  @spa {
+    not path /assets/*
+    not path /favicon.* /robots.txt /sitemap.xml
+    file {
+      try_files {path} /index.html
+    }
+  }
+  rewrite @spa {http.matchers.file.relative}
+
+  file_server
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+
+  # Long-cache hashed asset bundles, no-cache the index.
+  @assets path /assets/*
+  header @assets Cache-Control "public, max-age=31536000, immutable"
+
+  @html path /index.html
+  header @html Cache-Control "no-cache"
 }

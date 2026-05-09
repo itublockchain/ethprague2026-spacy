@@ -1,38 +1,56 @@
 services:
   postgres:
     image: postgres:16
+    container_name: spacy-postgres
     environment:
       POSTGRES_USER: spacy
-      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
       POSTGRES_DB: spacy
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
     volumes:
       - /var/lib/spacy/postgres:/var/lib/postgresql/data
     secrets:
       - pg_password
-    restart: always
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U spacy -d spacy']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
 
   api:
-    image: ghcr.io/spacy-computer/api:latest
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: spacy-api
     env_file: /etc/spacy/api.env
+    environment:
+      MOCK_ATTESTATION: 'false'
     depends_on:
-      - postgres
-    ports:
-      - "127.0.0.1:8080:8080"
+      postgres:
+        condition: service_healthy
     devices:
       - /dev/sev-guest:/dev/sev-guest
-    restart: always
+    volumes:
+      # Host's sev-guest-get-report binary, built from AMDESE/sev-guest.
+      # Read-only — container only needs to exec it. glibc compat: host AL2023
+      # and oven/bun:1.3-debian both ship glibc 2.36+, runs without rebuild.
+      - /usr/local/bin/sev-guest-get-report:/usr/local/bin/sev-guest-get-report:ro
+    restart: unless-stopped
 
   caddy:
     image: caddy:2
+    container_name: spacy-caddy
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - /var/lib/spacy/caddy:/data
+      - /var/lib/spacy/caddy/data:/data
+      - /var/lib/spacy/caddy/config:/config
+      - /opt/spacy/ethprague2026-spacy/apps/web/dist:/srv/web:ro
     depends_on:
       - api
-    restart: always
+    restart: unless-stopped
 
 secrets:
   pg_password:

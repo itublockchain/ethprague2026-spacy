@@ -1,6 +1,8 @@
 import { execFileSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { env } from '../config/env'
 import { logger } from '../lib/logger'
 
@@ -29,17 +31,30 @@ export async function fetchSelfAttestation(): Promise<SelfAttestation> {
     return cached
   }
 
+  // sev-guest-get-report writes the binary report to disk. We feed a fresh
+  // 64-byte nonce as data-file (its sha512 ends up as the report's user_data
+  // field, binding the report to this exact request) and read the 1184-byte
+  // output back as hex.
   const nonce = randomBytes(64).toString('hex')
+  const dataFile = join(tmpdir(), `spacy-nonce-${process.pid}-${Date.now()}`)
+  const outFile = join(tmpdir(), `spacy-report-${process.pid}-${Date.now()}`)
 
   let reportHex: string
   try {
-    reportHex = execFileSync('sev-guest', ['--user-data', nonce], { encoding: 'utf8' })
-      .trim()
-      .replace(/\s+/g, '')
+    writeFileSync(dataFile, nonce, 'utf8')
+    execFileSync('sev-guest-get-report', ['-f', dataFile, outFile], { stdio: 'pipe' })
+    reportHex = readFileSync(outFile).toString('hex')
   } catch (err) {
     logger.error({ err }, 'sev-guest fetch failed; falling back to mock')
     cached = buildMockReport()
     return cached
+  } finally {
+    try {
+      unlinkSync(dataFile)
+    } catch {}
+    try {
+      unlinkSync(outFile)
+    } catch {}
   }
 
   const vlekPath = '/sys/kernel/security/sev/cert-chain'
