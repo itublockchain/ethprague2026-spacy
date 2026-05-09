@@ -7,7 +7,7 @@ description: API reference for the useSign hook — sign and broadcast EIP-1559 
 Builds, signs (via the attested backend), and broadcasts a transaction in one call.
 
 ```ts
-import { useSign } from '@spacy/sdk'
+import { useSign } from '@spacy-computer/sdk'
 
 function useSign(): UseSign
 

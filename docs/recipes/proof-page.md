@@ -8,7 +8,7 @@ Build a `/proof/:slug` page that renders the full attestation receipt as the IPF
 
 ```tsx
 // src/pages/Proof.tsx
-import { useAttestation } from '@spacy/sdk'
+import { useAttestation } from '@spacy-computer/sdk'
 
 export function Proof({ slug }: { slug: string }) {
   const { proof, error } = useAttestation(slug)

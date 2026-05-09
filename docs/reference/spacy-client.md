@@ -11,7 +11,7 @@ description: Imperative API reference for the SpacyClient class.
 * You're building a custom abstraction on top of the SDK.
 
 ```ts
-import { SpacyClient } from '@spacy/sdk'
+import { SpacyClient } from '@spacy-computer/sdk'
 
 const client = new SpacyClient({
   apiBaseUrl: 'https://api.spacy.computer',
@@ -111,7 +111,7 @@ const { txHash, attestationSlug } = await client.signAndSend(
 ### Use the SDK in a Node script
 
 ```ts
-import { SpacyClient } from '@spacy/sdk'
+import { SpacyClient } from '@spacy-computer/sdk'
 
 const client = new SpacyClient({
   apiBaseUrl: 'https://api.spacy.computer',
@@ -143,4 +143,4 @@ const onCustomAction = async () => {
 ## See also
 
 * [`SpacyProvider`](spacy-provider.md) — the React wrapper around this class.
-* [Types](types.md) — every type re-exported from `@spacy/sdk`.
+* [Types](types.md) — every type re-exported from `@spacy-computer/sdk`.

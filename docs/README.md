@@ -4,7 +4,7 @@ description: React-first embedded wallet SDK with verifiable, attested signing.
 
 # Introduction
 
-`@spacy/sdk` is the official client SDK for **Spacy** — an embedded wallet whose signing key lives in TEE-backed hardware (Intel TDX), whose coordinator attests itself (AMD SEV-SNP), and whose every transaction emits a verifiable receipt — pinned to IPFS, pointed to from chain, validatable by anyone without trusting Spacy.
+`@spacy-computer/sdk` is the official client SDK for **Spacy** — an embedded wallet whose signing key lives in TEE-backed hardware (Intel TDX), whose coordinator attests itself (AMD SEV-SNP), and whose every transaction emits a verifiable receipt — pinned to IPFS, pointed to from chain, validatable by anyone without trusting Spacy.
 
 The SDK gives you Privy-style UX (Google sign-in, hosted wallet, one-call transaction signing) on top of that trust model.
 
@@ -19,7 +19,7 @@ The SDK gives you Privy-style UX (Google sign-in, hosted wallet, one-call transa
 ## Three lines to integrate
 
 ```tsx
-import { SpacyProvider, useWallet, useSign } from '@spacy/sdk'
+import { SpacyProvider, useWallet, useSign } from '@spacy-computer/sdk'
 
 <SpacyProvider config={{ apiBaseUrl: 'https://api.spacy.computer', chainId: 11155111 }}>
   <App />
@@ -49,12 +49,13 @@ That's the whole surface. The browser does no signing — it only constructs the
 
 | Requirement | Version |
 |---|---|
-| React | `^18.3.0` or `^19.0.0` |
-| Bundled `viem` | `^2.21.0` |
-| Module type | ESM only |
-| TypeScript | First-class — types ship with the source, no separate `@types` package |
+| Latest published | `0.0.1-alpha.0` (alpha — API may still shift) |
+| React (peer) | `^18.3.0` or `^19.0.0` |
+| `viem` (peer) | `^2.21.0` |
+| Module formats | Dual ESM + CJS (`import` and `require` both work) |
+| TypeScript | First-class — `dist/index.d.ts` ships with the package |
 | Chains supported out of the box | Sepolia (`11155111`), Base Sepolia (`84532`); any EVM chain via custom `chainId` + `rpcUrl` |
 
 ## License
 
-`@spacy/sdk` is published under **AGPL-3.0** as part of the [Spacy monorepo](https://github.com/spacy-computer/spacy). Deliberate, not default — embedded wallet trust models should be inspectable. If you fork the SDK and run a derived service, you publish your modifications.
+`@spacy-computer/sdk` is published under **AGPL-3.0** as part of the [Spacy monorepo](https://github.com/itublockchain/spacy). Deliberate, not default — embedded wallet trust models should be inspectable. If you fork the SDK and run a derived service, you publish your modifications.

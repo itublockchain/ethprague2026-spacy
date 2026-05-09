@@ -8,7 +8,7 @@ A complete, copy-pasteable example: sign-in button, loading state, signed-in das
 
 ```tsx
 // src/App.tsx
-import { useWallet } from '@spacy/sdk'
+import { useWallet } from '@spacy-computer/sdk'
 
 export function App() {
   const { user, wallet, ready, login, logout } = useWallet()
@@ -52,7 +52,7 @@ export function App() {
 
 ```tsx
 // src/main.tsx
-import { SpacyProvider } from '@spacy/sdk'
+import { SpacyProvider } from '@spacy-computer/sdk'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 

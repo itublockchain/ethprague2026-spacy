@@ -7,7 +7,7 @@ description: API reference for the useWallet hook — current user, wallet, and 
 Returns the current user, the current wallet, and the actions to sign in, sign out, and re-sync.
 
 ```ts
-import { useWallet } from '@spacy/sdk'
+import { useWallet } from '@spacy-computer/sdk'
 
 function useWallet(): UseWallet
 

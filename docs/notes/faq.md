@@ -1,5 +1,5 @@
 ---
-description: Frequently asked questions about @spacy/sdk.
+description: Frequently asked questions about @spacy-computer/sdk.
 ---
 
 # FAQ
@@ -18,7 +18,7 @@ See [How it works](../how-it-works.md) for the full trust chain.
 
 No, not in this version. Self-custody export is on the SpaceComputer roadmap (key extraction with attested zeroization). When that ships, the SDK will gain a corresponding API.
 
-## Is `@spacy/sdk` post-quantum?
+## Is `@spacy-computer/sdk` post-quantum?
 
 No. ECDSA over secp256k1 is what the SDK signs with today — same as every other Web3 wallet. SpaceComputer has a published post-quantum migration path (ML-DSA, layered via the satellite TPM), and Spacy's architecture treats the KMS as a swappable signing backend. When PQC primitives go live, the SDK migrates by changing one parameter. The receipt schema is already designed to carry both classical and post-quantum signatures side-by-side under a future `spacy-attestation/2` version.
 
@@ -71,7 +71,7 @@ Not via `useAttestation` — it's client-only and depends on React state. Server
 
 ## Where do I file bugs?
 
-[github.com/spacy-computer/spacy/issues](https://github.com/spacy-computer/spacy/issues).
+[github.com/itublockchain/spacy/issues](https://github.com/itublockchain/spacy/issues).
 
 ## License?
 

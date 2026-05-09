@@ -1,12 +1,12 @@
 ---
-description: How @spacy/sdk talks to the attested Spacy backend, where each step happens, and what the trust chain looks like.
+description: How @spacy-computer/sdk talks to the attested Spacy backend, where each step happens, and what the trust chain looks like.
 ---
 
 # How it works
 
 ## The split
 
-`@spacy/sdk` is a **browser-side orchestrator**. The signing key, the entropy witness, and the attestation report all live server-side, inside hardware-backed TEEs. The SDK never sees a private key.
+`@spacy-computer/sdk` is a **browser-side orchestrator**. The signing key, the entropy witness, and the attestation report all live server-side, inside hardware-backed TEEs. The SDK never sees a private key.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -36,7 +36,7 @@ The browser does the cheap, public, replayable work. The TEE does the work that 
 
 Walk through what `signAndSend({ to, value })` does, step by step:
 
-1. **Read chain state.** The SDK uses its bundled `viem` `PublicClient` to fetch the wallet's `nonce` and current EIP-1559 fees in parallel from your configured RPC.
+1. **Read chain state.** The SDK uses an internal `viem` `PublicClient` (`viem` is a peer dependency you install) to fetch the wallet's `nonce` and current EIP-1559 fees in parallel from your configured RPC.
 2. **Build the unsigned transaction.** `buildUnsigned()` produces a `TransactionSerializableEIP1559` from `{ chainId, nonce, to, value, data, maxFeePerGas, maxPriorityFeePerGas, gas }`. Defaults: `data: '0x'`, `gas: 21_000n`.
 3. **Compute the digest.** `keccak256(serializeTransaction(unsigned))`. This is the 32 bytes that get signed.
 4. **Send digest + tx metadata to the backend.** `POST /sign/digest` with `{ digest, txMetadata }`. The browser carries the `httpOnly` session cookie.
@@ -81,7 +81,7 @@ A verifier reconstructs the chain by walking these in reverse, **without** trust
 
 * **It does not store private keys.** Anywhere. Not in memory, not in `localStorage`, not in IndexedDB.
 * **It does not handle gas funding.** Your user's wallet pays for its own transactions on the configured chain. The SDK does not run a relayer or paymaster.
-* **It does not verify TDX or SEV-SNP quotes in the browser.** Verification happens server-side at sign time and again in `@spacy/shared` for any third-party verifier. The SDK surfaces `kmsQuoteVerified` on the proof payload but does not re-check it client-side.
+* **It does not verify TDX or SEV-SNP quotes in the browser.** Verification happens server-side at sign time, and any third-party verifier can re-run it offline using the receipt and the bundled trust anchors. The SDK surfaces `kmsQuoteVerified` on the proof payload but does not re-check it client-side.
 * **It does not subscribe to events on chain.** `useAttestation()` polls the Spacy API every 4 seconds for proof status; that endpoint is what watches the chain.
 
 That's the whole model. Continue to [Reference →](reference/spacy-provider.md) for the API shapes, or jump to [Recipes →](recipes/sign-in.md) for working code.

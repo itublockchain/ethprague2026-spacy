@@ -7,7 +7,7 @@ description: Sign and broadcast an EIP-1559 transaction with attested provenance
 Wire `signAndSend` to a button. Show pending state, success state, and a proof link.
 
 ```tsx
-import { useWallet, useSign } from '@spacy/sdk'
+import { useWallet, useSign } from '@spacy-computer/sdk'
 
 const RECIPIENT = '0x000000000000000000000000000000000000dEaD' as const
 
@@ -78,10 +78,10 @@ await signAndSend({
 * **The wallet pays for its own gas.** `signAndSend` does not run a relayer or paymaster. Make sure the wallet has enough native ETH on the configured chain. On Sepolia, faucets like [sepoliafaucet.com](https://sepoliafaucet.com) work.
 * **You can't override `nonce` or fees.** The SDK reads them from the configured RPC. If you need custom behaviour, drop down to [`SpacyClient`](../reference/spacy-client.md) and `client.publicClient` directly.
 * **The default `gas` of `21_000` only works for native transfers.** Override for any contract call. Underestimating gas causes the broadcast to revert at the RPC level — your `signAndSend` rejects.
-* **The transaction is broadcast, not awaited.** `signAndSend` returns once the RPC has accepted the raw transaction. To wait for inclusion, use the bundled `client.publicClient`:
+* **The transaction is broadcast, not awaited.** `signAndSend` returns once the RPC has accepted the raw transaction. To wait for inclusion, use the SDK's `client.publicClient`:
 
 ```tsx
-import { useSpacy } from '@spacy/sdk'
+import { useSpacy } from '@spacy-computer/sdk'
 
 const { client } = useSpacy()
 const { txHash } = await signAndSend(req)

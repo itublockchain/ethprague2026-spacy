@@ -1,31 +1,33 @@
 ---
-description: Every public type the @spacy/sdk barrel exports.
+description: Every public type the @spacy-computer/sdk barrel exports.
 ---
 
 # Types
 
-The SDK is TypeScript-first. Types ship from `src/index.ts` directly — no `@types/` package needed.
+The SDK is TypeScript-first. The published package ships its own `dist/index.d.ts` — no separate `@types/` install needed.
+
+The full public type surface from the package barrel:
 
 ```ts
-import type {
-  // Core
-  SpacyClientConfig,
-  WalletInfo,
-  SignRequest,
-  SignResult,
-} from '@spacy/sdk'
-
-// Re-exports from @spacy/shared (transitive — import from there for the
-// fullest, version-locked types):
-import type {
-  SessionUser,
-  WalletMeResponse,
-  SignDigestRequest,
-  SignDigestResponse,
-  ProofPayload,
-  AttestationReceiptV1,
-} from '@spacy/shared/schemas'
+import {
+  // runtime
+  SpacyProvider,
+  useSpacy,
+  useWallet,
+  useSign,
+  useAttestation,
+  SpacyClient,
+  // types
+  type SpacyClientConfig,
+  type SignRequest,
+  type SignResult,
+  type WalletInfo,
+  type SendState,
+  type Hex,
+} from '@spacy-computer/sdk'
 ```
+
+Anything not in that import is internal and not part of the public contract.
 
 ## Provider
 
@@ -41,17 +43,21 @@ interface SpacyClientConfig {
 
 ```ts
 interface WalletInfo {
-  address: `0x${string}`
-  createdAt: string
+  address: Hex          // 0x-prefixed Ethereum address
+  createdAt: string     // ISO 8601
   provenance: {
     entropyHash: string
     entropySig: string
     satelliteSource: string
   }
 }
+```
 
-interface SessionUser {
-  id: string
+The signed-in user shape (`SessionUser`) is observed via `useWallet().user` and `useSpacy().user`. Its runtime shape:
+
+```ts
+{
+  id: string         // uuid
   email: string
   name: string | null
 }
@@ -61,39 +67,27 @@ interface SessionUser {
 
 ```ts
 interface SignRequest {
-  to: `0x${string}`
-  value?: bigint | string
-  data?: `0x${string}`
+  to: Hex
+  value?: bigint | string  // string is treated as ETH and parsed via parseEther
+  data?: Hex
   gas?: bigint
 }
 
 interface SignResult {
-  txHash: `0x${string}`
+  txHash: Hex
   attestationSlug: string
 }
 
-// Wire shape — what the SDK posts to /sign/digest under the hood:
-interface SignDigestRequest {
-  digest: `0x${string}`
-  txMetadata: {
-    chainId: number
-    nonce: number
-    to: `0x${string}`
-    value: string
-    data: `0x${string}`
-    maxFeePerGas: string
-    maxPriorityFeePerGas: string
-    gas: string
-  }
-}
-
-interface SignDigestResponse {
-  signature: `0x${string}`
-  slug: string
-}
+// Typed via SendState while a signAndSend call is in flight; surfaced
+// indirectly through useSign().pending / .error / .lastResult.
+type SendState =
+  | { kind: 'idle' }
+  | { kind: 'pending' }
+  | { kind: 'error'; error: Error }
+  | { kind: 'sent'; result: SignResult }
 ```
 
-## Proof
+## Proof payload (observed via `useAttestation`)
 
 ```ts
 interface ProofPayload {
@@ -114,20 +108,20 @@ interface ProofPayload {
 
 ## Attestation receipt (v1)
 
-The full receipt schema. Always available at `proof.receipt` once `proof.status` advances past `pending_pin`.
+The shape of `proof.receipt` once the IPFS pin completes. Canonical spec lives at [spacy.computer/spec/attestation/v1](https://spacy.computer/spec/attestation/v1).
 
 ```ts
 interface AttestationReceiptV1 {
   version: 'spacy-attestation/1'
-  spec: string  // URL to the canonical spec
+  spec: string  // canonical spec URL
 
   transaction: {
     chainId: number
-    txHash: `0x${string}`
-    from: `0x${string}`
-    to: `0x${string}`
+    txHash: Hex
+    from: Hex
+    to: Hex
     nonce: number
-    digestSigned: `0x${string}`
+    digestSigned: Hex
     signedAt: string
   }
 
@@ -170,13 +164,15 @@ The receipt is the SDK's most important payload. It is what makes a Spacy transa
 
 ## Hook return types
 
-```ts
-import type { UseWallet, UseSign, UseAttestation } from '@spacy/sdk'
-```
+The hook return interfaces (`UseWallet`, `UseSign`, `UseAttestation`) are not currently re-exported from the package barrel. If you need them in your own code, derive from the hook itself:
 
-These three interfaces match the shapes returned by their respective hooks. They are not currently re-exported from the barrel file — import them from the hook source paths if you need them, or re-derive with `ReturnType<typeof useWallet>` etc.
+```ts
+import { useWallet } from '@spacy-computer/sdk'
+
+type UseWallet = ReturnType<typeof useWallet>
+```
 
 ## See also
 
-* `@spacy/shared/schemas` — canonical zod schemas. Import from there for runtime validation.
 * [Reference index](spacy-provider.md) — every API the SDK exposes.
+* [npm package](https://www.npmjs.com/package/@spacy-computer/sdk) — install metadata, latest version, README.

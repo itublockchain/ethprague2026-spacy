@@ -1,5 +1,5 @@
 ---
-description: Errors thrown by @spacy/sdk and how to handle each one.
+description: Errors thrown by @spacy-computer/sdk and how to handle each one.
 ---
 
 # Errors

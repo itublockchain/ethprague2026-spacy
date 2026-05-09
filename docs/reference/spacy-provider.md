@@ -7,7 +7,7 @@ description: API reference for <SpacyProvider> and the useSpacy() hook.
 The React provider that owns the SDK's session and wallet state. Wrap it once at the top of your component tree.
 
 ```tsx
-import { SpacyProvider } from '@spacy/sdk'
+import { SpacyProvider } from '@spacy-computer/sdk'
 
 <SpacyProvider config={{ apiBaseUrl, chainId, rpcUrl }}>
   <App />
@@ -79,7 +79,7 @@ For everyday use, prefer the typed hooks — they're stable contracts. `useSpacy
 ## Example: gating an entire app
 
 ```tsx
-import { SpacyProvider, useWallet } from '@spacy/sdk'
+import { SpacyProvider, useWallet } from '@spacy-computer/sdk'
 
 function Gate({ children }: { children: React.ReactNode }) {
   const { ready, user, login } = useWallet()

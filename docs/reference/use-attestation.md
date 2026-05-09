@@ -7,7 +7,7 @@ description: API reference for the useAttestation hook — poll proof status unt
 Polls the proof endpoint until the IPFS pin and on-chain pointer reach a terminal status. Useful for proof pages, attestation badges, and any UI that needs to wait for the off-chain pieces of a Spacy transaction to settle.
 
 ```ts
-import { useAttestation } from '@spacy/sdk'
+import { useAttestation } from '@spacy-computer/sdk'
 
 function useAttestation(slug: string | null | undefined): UseAttestation
 
@@ -79,7 +79,7 @@ interface ProofPayload {
 }
 ```
 
-The `receipt` field carries the full v1 attestation receipt (transaction details, KMS Intel TDX quote, coordinator AMD SEV-SNP self-attestation, cosmic entropy witness, verification anchors). It is `null` until the IPFS pin completes. The full schema lives in `@spacy/shared/schemas`.
+The `receipt` field carries the full v1 attestation receipt (transaction details, KMS Intel TDX quote, coordinator AMD SEV-SNP self-attestation, cosmic entropy witness, verification anchors). It is `null` until the IPFS pin completes. The full schema is documented at the canonical spec URL: [spacy.computer/spec/attestation/v1](https://spacy.computer/spec/attestation/v1).
 
 ## Examples
 

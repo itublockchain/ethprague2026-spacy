@@ -1,5 +1,5 @@
 ---
-description: Install @spacy/sdk and wire SpacyProvider into a React app in five minutes.
+description: Install @spacy-computer/sdk and wire SpacyProvider into a React app in five minutes.
 ---
 
 # Getting started
@@ -8,13 +8,13 @@ description: Install @spacy/sdk and wire SpacyProvider into a React app in five 
 
 ```bash
 # pnpm
-pnpm add @spacy/sdk viem react
+pnpm add @spacy-computer/sdk viem react
 
 # bun
-bun add @spacy/sdk viem react
+bun add @spacy-computer/sdk viem react
 
 # npm
-npm install @spacy/sdk viem react
+npm install @spacy-computer/sdk viem react
 ```
 
 `viem` and `react` are peer dependencies. The SDK does not bundle them.
@@ -25,7 +25,7 @@ The provider creates a `SpacyClient`, fetches the current session on mount, auto
 
 ```tsx
 // src/main.tsx
-import { SpacyProvider } from '@spacy/sdk'
+import { SpacyProvider } from '@spacy-computer/sdk'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 
@@ -49,7 +49,7 @@ See [SpacyProvider reference](reference/spacy-provider.md) for every option.
 
 ```tsx
 // src/App.tsx
-import { useWallet } from '@spacy/sdk'
+import { useWallet } from '@spacy-computer/sdk'
 
 export function App() {
   const { user, wallet, ready, login, logout } = useWallet()
@@ -75,7 +75,7 @@ export function App() {
 ## 4. Send a transaction
 
 ```tsx
-import { useWallet, useSign } from '@spacy/sdk'
+import { useWallet, useSign } from '@spacy-computer/sdk'
 
 export function SendButton() {
   const { wallet } = useWallet()
