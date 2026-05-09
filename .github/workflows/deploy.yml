@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  workflow_dispatch:        # manual trigger from Actions UI
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'deploy/**'
+      - 'scripts/deploy.sh'
+      - '.github/workflows/deploy.yml'
+
+# Serialise deploys — never run two at once, but don't kill an in-flight one.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: []   # CI runs in parallel; if you want gating, change to `[ci]` and rename CI job
+    environment: production
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SSH_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -t ed25519 -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Run deploy.sh on EC2
+        env:
+          SSH_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=accept-new \
+              ec2-user@"$SSH_HOST" \
+              'bash /opt/spacy/ethprague2026-spacy/scripts/deploy.sh'
+
+      - name: Smoke check from CI
+        run: |
+          set -eux
+          curl -sf --max-time 10 https://api.spacy.computer/health
+          curl -sf --max-time 10 https://api.spacy.computer/health/attestation \
+            | jq -e '.mock == false' >/dev/null
+          curl -sIf --max-time 10 https://spacy.computer/ | head -1
