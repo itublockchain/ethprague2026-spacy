@@ -25,7 +25,7 @@ sequenceDiagram
     participant Sat as SpaceComputer Satellite
     participant KMS as Orbitport KMS (Intel TDX)
     participant IPFS as Pinata / IPFS
-    participant Chain as Ethereum Mainnet
+    participant Chain as Sepolia
 
     Client->>Client: Build unsigned EIP-1559 tx, compute keccak256 digest
     Client->>Coord: POST /sign/digest { digest, txMetadata }
@@ -45,7 +45,7 @@ sequenceDiagram
 1. **Browser builds the unsigned tx** with viem and computes the digest. The private key never touches the client.
 2. **Coordinator (SEV-SNP)** samples a cTRNG witness from a satellite, asks **Orbitport KMS (Intel TDX)** to sign the digest, and persists the TDX quote alongside the signing entropy.
 3. **Browser splices the signature** and broadcasts the raw tx itself — so the user's wallet pays the on-chain gas, not a hidden relayer.
-4. **Coordinator pins the receipt to IPFS** and emits `AttestationPublished(wallet, txHash, ipfsCid)` on Ethereum Mainnet as a censorship-resistant discovery index.
+4. **Coordinator pins the receipt to IPFS** and emits `AttestationPublished(wallet, txHash, ipfsCid)` on Sepolia as a censorship-resistant discovery index.
 5. **Verifiers walk the chain offline.** Intel root CA → AMD ARK → SpaceComputer satellite key → IPFS CID → on-chain event. No step requires trusting `spacy.computer`.
 
 ## Key Features
@@ -56,13 +56,13 @@ sequenceDiagram
 
 **🔐 Heterogeneous TEEs (Intel TDX + AMD SEV-SNP)** — The signer runs in **Intel TDX**, the coordinator runs in **AMD SEV-SNP**, and the receipt embeds quotes from both. A vulnerability in either silicon line doesn't compromise the receipt unless the same flaw exists in both — defense-in-depth as a stack invariant, not a slide.
 
-**📜 On-Chain Attestation Index** — A 24-line `SpacyAttestations` contract on Ethereum Mainnet emits `AttestationPublished(wallet, txHash, ipfsCid)` for every signed transaction. The contract is intentionally not a trust anchor — it's a discovery index. The trust lives in the receipt.
+**📜 On-Chain Attestation Index** — A 24-line `SpacyAttestations` contract on Sepolia emits `AttestationPublished(wallet, txHash, ipfsCid)` for every signed transaction. The contract is intentionally not a trust anchor — it's a discovery index. The trust lives in the receipt.
 
 **🌐 IPFS-Pinned Receipts** — Receipt JSON pinned via Pinata, content-addressed by CIDv1. Anyone can fetch it from any gateway and verify it offline against bundled root certs.
 
 **🪪 Self-Attested Coordinator** — The backend exposes `/health/attestation` carrying its own SEV-SNP report at boot. You can verify the running binary before you trust any signing path it stands up — and the report is included with every receipt the coordinator emits.
 
-**🛠️ Drop-in SDK** — `@spacy-computer/sdk` ships a single `<SpacyProvider>` plus three hooks (`useWallet`, `useSign`, `useAttestation`). Five minutes from `npm install` to a working "Sign in with Google → send 0.02 ETH on Ethereum" demo.
+**🛠️ Drop-in SDK** — `@spacy-computer/sdk` ships a single `<SpacyProvider>` plus three hooks (`useWallet`, `useSign`, `useAttestation`). Five minutes from `npm install` to a working "Sign in with Google → send 0.02 ETH on Sepolia" demo.
 
 **🛡️ AGPL-3.0** — Every byte that ships in production is open. If we change the deployed coordinator, we ship the change. If we go away, you can run it yourself.
 
@@ -88,8 +88,8 @@ sequenceDiagram
 open https://spacy.computer
 
 # 1. Sign in with Google
-# 2. Backend auto-provisions an Ethereum Mainnet wallet inside an Intel TDX KMS
-# 3. Send a small amount of ETH to your spacy address
+# 2. Backend auto-provisions a Sepolia wallet inside an Intel TDX KMS
+# 3. Get test ETH from any Sepolia faucet → your spacy address
 # 4. Send 0.02 ETH — watch the orbital sign animation
 # 5. Open the proof page (link on the success card) to walk the trust chain
 ```
@@ -105,7 +105,7 @@ import { SpacyProvider, useWallet, useSign } from '@spacy-computer/sdk'
 
 function Root() {
   return (
-    <SpacyProvider config={{ apiBaseUrl: 'https://api.spacy.computer', chainId: 1 }}>
+    <SpacyProvider config={{ apiBaseUrl: 'https://api.spacy.computer', chainId: 11155111 }}>
       <App />
     </SpacyProvider>
   )
@@ -126,7 +126,7 @@ function App() {
           to: '0x5Ba55eaBD43743Ef6bB6285f393fA3CbA33FbA5e',
           value: '0.02', // ETH, string accepted
         })
-        // Tx broadcast on Ethereum Mainnet. attestationSlug → public verifiable proof page.
+        // Tx broadcast on Sepolia. attestationSlug → public verifiable proof page.
       }}
     >
       Send 0.02 ETH
@@ -141,7 +141,7 @@ Anyone can verify a Spacy transaction offline — the SDK is for senders, not fo
 
 ```bash
 # Read the on-chain event
-cast logs --rpc-url mainnet \
+cast logs --rpc-url sepolia \
   --address 0xCe31398be624975941e71F94eC6D4c5472449B00 \
   'AttestationPublished(address,bytes32,string)' \
   --from-block <block>
@@ -181,7 +181,7 @@ graph TD
         I[Pinata · IPFS pinning]
     end
 
-    subgraph Chain["Ethereum Mainnet"]
+    subgraph Chain["Sepolia"]
         J[SpacyAttestations.sol]
     end
 
@@ -202,11 +202,11 @@ graph TD
 | **Frontend** | Vite 6, React 19, TypeScript (strict), Tailwind CSS v4, React Three Fiber, drei, GSAP, motion, viem |
 | **Backend** | Express, TypeScript, Prisma, PostgreSQL, Passport (Google OAuth), JWT (jose), Zod, pino |
 | **SDK** | `@spacy-computer/sdk` — published to npm; React hooks + `SpacyClient` over the backend HTTP API |
-| **Contracts** | Foundry, Solidity 0.8.27, Ethereum Mainnet |
+| **Contracts** | Foundry, Solidity 0.8.27, Sepolia |
 | **TEEs** | Intel TDX (Orbitport KMS), AMD SEV-SNP (AWS EC2 c6a confidential compute) |
 | **Entropy** | SpaceComputer Orbitport cTRNG (satellite-signed) |
 | **Receipts** | IPFS via Pinata, CIDv1 content addressing |
-| **Chain** | Ethereum Mainnet — viem public RPC |
+| **Chain** | Sepolia — viem public RPC |
 | **Monorepo** | Turborepo, Bun workspaces, Biome (lint + format) |
 
 ## Project Structure
@@ -284,8 +284,8 @@ PINATA_JWT="..."
 PINATA_GATEWAY="https://gateway.pinata.cloud"
 
 # Chain
-CHAIN_ID=1
-RPC_URL="https://ethereum.publicnode.com"
+CHAIN_ID=11155111
+RPC_URL="https://ethereum-sepolia.publicnode.com"
 ATTESTATION_CONTRACT_ADDRESS="0xCe31398be624975941e71F94eC6D4c5472449B00"
 RELAYER_PRIVATE_KEY="0x..."   # Pays gas for AttestationPublished events only
 
@@ -303,7 +303,7 @@ cp apps/web/.env.example apps/web/.env.local
 
 ```env
 VITE_SPACY_API_URL=http://localhost:8080
-VITE_RPC_URL=https://ethereum.publicnode.com
+VITE_SEPOLIA_RPC_URL=https://sepolia.gateway.tenderly.co
 ```
 
 ### 4. Start everything
@@ -354,7 +354,8 @@ cd packages/contracts && forge test        # Run the SpacyAttestations tests
 - [x] `@spacy-computer/sdk` published to npm
 - [x] Web demo: Google sign-in → wallet provision → orbital sign theatre
 - [x] Public proof page with offline verification walkthrough
-- [x] Ethereum Mainnet
+- [x] Sepolia testnet deployment
+- [ ] Mainnet — once the KMS quote endpoint stabilizes upstream
 - [ ] Multi-chain: Base, Optimism, Arbitrum (same coordinator, per-chain RPC)
 - [ ] Account abstraction adapter (ERC-4337) for gasless onboarding
 - [ ] Verifier CLI (`spacy verify <slug>`) bundled with the SDK
@@ -365,7 +366,7 @@ cd packages/contracts && forge test        # Run the SpacyAttestations tests
 - [Web App](https://spacy.computer/)
 - [SDK on npm](https://www.npmjs.com/package/@spacy-computer/sdk)
 - [SDK Docs](./docs/README.md)
-- [Attestation contract on Ethereum Mainnet](https://etherscan.io/address/0xCe31398be624975941e71F94eC6D4c5472449B00)
+- [Attestation contract on Sepolia](https://sepolia.etherscan.io/address/0xCe31398be624975941e71F94eC6D4c5472449B00)
 - [SpaceComputer Orbitport](https://spacecomputer.io/)
 - [Intel TDX](https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/overview.html)
 - [AMD SEV-SNP](https://www.amd.com/en/developer/sev.html)
@@ -379,4 +380,4 @@ cd packages/contracts && forge test        # Run the SpacyAttestations tests
 - [Feyyaz Numan Cavlak](https://x.com/feyyazcigim)
 - [Barış Bice](https://x.com/0xbaris_)
 
-Built by [ITU Blockchain](https://x.com/ITUBlockchainen) at ETHPrague 2026.
+Built by [ITU Blockchain](https://x.com/ITUblockchain) at ETHPrague 2026.
