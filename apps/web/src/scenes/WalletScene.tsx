@@ -1,18 +1,108 @@
-import { Float, OrbitControls } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Line } from '@react-three/drei'
+import { Canvas, useFrame } from '@react-three/fiber'
 import type { SendState } from '@spacy-computer/sdk'
 import gsap from 'gsap'
 import { motion } from 'motion/react'
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { Color, type Group, Mesh, MeshStandardMaterial } from 'three'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import type { Group } from 'three'
 import { Satellite } from './objects/Satellite'
 
 interface WalletSceneProps {
   state: SendState
 }
 
-const AURORA = '#6FA88F'
-const SAT_BASE = '#000000'
+const ARC_A = 5
+const ARC_B = 3.62
+const Y_OFFSET = -2.52
+const STEPS = 96
+
+function arcPosition(p: number): [number, number, number] {
+  const t = Math.PI - p * Math.PI
+  return [ARC_A * Math.cos(t), ARC_B * Math.sin(t) + Y_OFFSET, 0]
+}
+
+function arcTangentAngle(p: number): number {
+  const t = Math.PI - p * Math.PI
+  const dx = ARC_A * Math.sin(t) * Math.PI
+  const dy = -ARC_B * Math.cos(t) * Math.PI
+  return Math.atan2(dy, dx) - Math.PI / 2
+}
+
+function ArcPath({ opacity }: { opacity: number }) {
+  const points = useMemo<[number, number, number][]>(() => {
+    const pts: [number, number, number][] = []
+    for (let i = 0; i <= STEPS; i++) {
+      pts.push(arcPosition(i / STEPS))
+    }
+    return pts
+  }, [])
+  return <Line points={points} color="#9A9388" lineWidth={1} transparent opacity={opacity} />
+}
+
+interface TravelingSatelliteProps {
+  progressRef: React.RefObject<{ current: number }>
+}
+
+function TravelingSatellite({ progressRef }: TravelingSatelliteProps) {
+  const ref = useRef<Group>(null)
+
+  useFrame(() => {
+    if (!ref.current) return
+    const p = progressRef.current.current
+    if (p < -0.05 || p > 1.05) {
+      ref.current.visible = false
+      return
+    }
+    ref.current.visible = true
+    const [x, y, z] = arcPosition(p)
+    ref.current.position.set(x, y, z)
+    ref.current.rotation.z = arcTangentAngle(p)
+  })
+
+  return (
+    <group ref={ref} visible={false}>
+      <Satellite scale={0.55} />
+    </group>
+  )
+}
+
+function targetProgress(status: SendState['status']): number {
+  switch (status) {
+    case 'idle':
+      return -0.1
+    case 'failed':
+      return -0.1
+    case 'authorizing':
+      return 0.18
+    case 'orbital-signing':
+      return 0.5
+    case 'ground-signing':
+      return 0.5
+    case 'broadcasting':
+      return 0.5
+    case 'confirmed':
+      return 1.1
+    default:
+      return -0.1
+  }
+}
+
+function transitionDuration(status: SendState['status']): number {
+  switch (status) {
+    case 'authorizing':
+      return 0.6
+    case 'orbital-signing':
+      return 1.2
+    case 'ground-signing':
+      return 0.5
+    case 'broadcasting':
+      return 0.4
+    case 'confirmed':
+      return 1.2
+    default:
+      return 0.6
+  }
+}
 
 const HEX = '0123456789abcdef'
 
@@ -48,10 +138,10 @@ function ScrambleOverlay({ active }: { active: boolean }) {
 
   return (
     <motion.div
-      className="pointer-events-none absolute inset-0 flex select-none flex-col items-center justify-center gap-1.5 font-mono text-[14px]"
+      className="pointer-events-none absolute top-[28%] left-1/2 flex -translate-x-1/2 -translate-y-1/2 select-none flex-col items-center gap-1.5 font-mono text-[14px]"
       initial={false}
       animate={{ opacity: active ? 0.95 : 0 }}
-      transition={{ duration: 1.4, ease: 'easeInOut' }}
+      transition={{ duration: 1.2, ease: 'easeInOut' }}
       aria-hidden="true"
     >
       {lines.map((line) => (
@@ -63,87 +153,66 @@ function ScrambleOverlay({ active }: { active: boolean }) {
   )
 }
 
-function useEmissiveShift(
-  groupRef: React.RefObject<Group | null>,
-  active: boolean,
-  baseColor: string,
-) {
-  useEffect(() => {
-    const root = groupRef.current
-    if (!root) return
-    const target = new Color(active ? AURORA : baseColor)
-    root.traverse((child) => {
-      if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
-        gsap.to(child.material.emissive, {
-          r: target.r,
-          g: target.g,
-          b: target.b,
-          duration: 0.6,
-          ease: 'power2.out',
-        })
-      }
-    })
-  }, [active, baseColor, groupRef])
-}
-
 export function WalletScene({ state }: WalletSceneProps) {
-  const satRef = useRef<Group>(null)
+  const progressRef = useRef({ current: -0.1 })
 
-  const satActive =
-    state.status === 'orbital-signing' ||
-    state.status === 'ground-signing' ||
-    state.status === 'broadcasting'
+  useEffect(() => {
+    const target = targetProgress(state.status)
+    const duration = transitionDuration(state.status)
+    gsap.to(progressRef.current, {
+      current: target,
+      duration,
+      ease: 'power1.inOut',
+    })
+  }, [state.status])
 
-  const obscured = state.status === 'idle' || state.status === 'failed'
+  const arcOpacity = 0.3
 
-  useEmissiveShift(satRef, satActive, SAT_BASE)
+  const auroraActive = state.status === 'ground-signing' || state.status === 'broadcasting'
+  const obscured =
+    state.status === 'idle' ||
+    state.status === 'failed' ||
+    state.status === 'authorizing' ||
+    state.status === 'orbital-signing'
 
   return (
-    <div className="relative mx-auto w-full max-w-[760px]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <Canvas
+        camera={{ position: [0, 0, 8], fov: 35 }}
+        dpr={[1, 1.5]}
+        frameloop="always"
+        gl={{ antialias: true, alpha: true }}
+      >
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[5, 5, 5]} intensity={0.6} />
+        <directionalLight position={[-5, 0, -3]} intensity={0.3} color="#DCE4EC" />
+        <ArcPath opacity={arcOpacity} />
+        <Suspense fallback={null}>
+          <TravelingSatellite progressRef={progressRef} />
+        </Suspense>
+      </Canvas>
+
       <motion.div
-        className="pointer-events-none absolute -inset-16"
+        className="pointer-events-none absolute top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(111,168,143,0.45), transparent 65%)',
+          width: 360,
+          height: 360,
+          background: 'radial-gradient(circle, rgba(111,168,143,0.55), transparent 65%)',
           filter: 'blur(48px)',
         }}
         initial={false}
-        animate={{ opacity: satActive ? 1 : 0 }}
-        transition={{ duration: 0.9, ease: 'easeOut' }}
+        animate={
+          auroraActive
+            ? { opacity: [0.55, 1, 0.55], scale: [1.0, 1.15, 1.0] }
+            : { opacity: 0, scale: 0.85 }
+        }
+        transition={
+          auroraActive
+            ? { duration: 1.6, ease: 'easeInOut', repeat: Number.POSITIVE_INFINITY }
+            : { duration: 0.9, ease: 'easeOut' }
+        }
         aria-hidden="true"
       />
-
-      <motion.div
-        className="relative h-[320px] w-full"
-        animate={{
-          filter: obscured ? 'blur(26px) saturate(1.1)' : 'blur(0px) saturate(1.05)',
-        }}
-        transition={{ duration: 1.4, ease: 'easeInOut' }}
-      >
-        <Canvas
-          camera={{ position: [0, 0, 3.4], fov: 35 }}
-          dpr={[1, 1.5]}
-          frameloop="always"
-          gl={{ antialias: true, alpha: true }}
-        >
-          <ambientLight intensity={0.4} />
-          <directionalLight position={[5, 5, 5]} intensity={0.6} />
-          <directionalLight position={[-5, 0, -3]} intensity={0.3} color="#DCE4EC" />
-          <Suspense fallback={null}>
-            <Float speed={1.6} rotationIntensity={0.18} floatIntensity={0.25}>
-              <group ref={satRef}>
-                <Satellite scale={1} />
-              </group>
-            </Float>
-          </Suspense>
-          <OrbitControls
-            enablePan={false}
-            enableZoom={false}
-            enableDamping
-            dampingFactor={0.08}
-            rotateSpeed={0.55}
-          />
-        </Canvas>
-      </motion.div>
 
       <ScrambleOverlay active={obscured} />
     </div>

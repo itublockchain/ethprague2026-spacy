@@ -46,7 +46,7 @@ export function Wallet() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col">
+    <div className="relative min-h-screen w-full overflow-hidden">
       <button
         type="button"
         onClick={signOut}
@@ -55,18 +55,17 @@ export function Wallet() {
         Sign out
       </button>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-y-10 px-6 pt-24 pb-12">
-        <WalletScene state={state} />
-        <div className="relative z-10 flex w-full justify-center">
-          <TransactionCard
-            walletAddress={walletAddress}
-            balance={balance}
-            refreshing={refreshing}
-            state={state}
-            onSend={send}
-          />
-        </div>
-      </div>
+      <WalletScene state={state} />
+
+      <main className="relative z-10 flex min-h-screen w-full items-center justify-center px-6 pt-[20vh]">
+        <TransactionCard
+          walletAddress={walletAddress}
+          balance={balance}
+          refreshing={refreshing}
+          state={state}
+          onSend={send}
+        />
+      </main>
     </div>
   )
 }
