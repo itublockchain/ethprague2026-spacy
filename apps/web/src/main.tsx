@@ -1,18 +1,26 @@
-import { PrivyProvider } from '@privy-io/react-auth'
+import { SpacyProvider } from '@spacy-computer/sdk'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import './index.css'
-import { privyConfig } from './lib/privy'
+import { SEPOLIA_CHAIN_ID } from './lib/constants'
 
-const appId = import.meta.env.VITE_PRIVY_APP_ID
+const apiBaseUrl = import.meta.env.VITE_SPACY_API_URL ?? 'http://localhost:8080'
+const rpcUrl = import.meta.env.VITE_SEPOLIA_RPC_URL
+
 const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('root element missing')
 
 createRoot(rootEl).render(
   <StrictMode>
-    <PrivyProvider appId={appId} config={privyConfig}>
+    <SpacyProvider
+      config={{
+        apiBaseUrl,
+        chainId: SEPOLIA_CHAIN_ID,
+        ...(rpcUrl ? { rpcUrl } : {}),
+      }}
+    >
       <App />
-    </PrivyProvider>
+    </SpacyProvider>
   </StrictMode>,
 )

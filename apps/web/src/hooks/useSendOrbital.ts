@@ -1,8 +1,6 @@
-import { useSendTransaction } from '@privy-io/react-auth'
-import type { Hex, SendState } from '@spacy/types'
+import { type Hex, type SendState, useSign } from '@spacy-computer/sdk'
 import { useCallback, useEffect, useState } from 'react'
 import { parseEther } from 'viem'
-import { SEPOLIA_CHAIN_ID } from '../lib/constants'
 import { publicClient } from '../lib/viem'
 
 interface UseSendOrbitalArgs {
@@ -18,11 +16,12 @@ interface UseSendOrbitalResult {
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
-// Visual phase durations are demo theatre, not real signing latency.
-// Real Privy signing happens in parallel; we just stage the UI on top of it.
+// Visual phase durations are demo theatre layered on top of real signing.
+// The KMS round-trip happens during the `ground-signing` phase; the orbital
+// pre-roll just gives the UI room to breathe so the animation reads.
 const ORBITAL_DELAY_MS = 600
 const ORBITAL_PHASE_MS = 1200
-const GROUND_PHASE_MS = 1200
+const GROUND_PHASE_MIN_MS = 1200
 const CONFIRMED_HOLD_MS = 30000
 
 function humanizeError(err: unknown): string {
@@ -48,21 +47,21 @@ function humanizeError(err: unknown): string {
 
 export function useSendOrbital({ to, amountEth }: UseSendOrbitalArgs): UseSendOrbitalResult {
   const [state, setState] = useState<SendState>({ status: 'idle' })
-  const { sendTransaction } = useSendTransaction()
+  const { signAndSend } = useSign()
 
   const run = useCallback(async () => {
     setState({ status: 'authorizing' })
 
     let txHash: Hex | null = null
+    let attestationSlug: string | undefined
     let txError: string | null = null
 
-    const txPromise = sendTransaction({
-      to,
-      value: parseEther(amountEth),
-      chainId: SEPOLIA_CHAIN_ID,
-    })
+    // Kick off the real signing flow immediately so the network round-trip
+    // overlaps with the orbital animation. Promise is awaited later.
+    const txPromise = signAndSend({ to, value: parseEther(amountEth) })
       .then((res) => {
-        txHash = (res as { hash: Hex }).hash
+        txHash = res.txHash
+        attestationSlug = res.attestationSlug
       })
       .catch((err: unknown) => {
         txError = humanizeError(err)
@@ -84,8 +83,7 @@ export function useSendOrbital({ to, amountEth }: UseSendOrbitalArgs): UseSendOr
     if (failEarly()) return
 
     setState({ status: 'ground-signing' })
-    await sleep(GROUND_PHASE_MS)
-    await txPromise
+    await Promise.all([txPromise, sleep(GROUND_PHASE_MIN_MS)])
     if (failEarly()) return
 
     if (!txHash) {
@@ -96,11 +94,15 @@ export function useSendOrbital({ to, amountEth }: UseSendOrbitalArgs): UseSendOr
     setState({ status: 'broadcasting' })
     try {
       await publicClient.waitForTransactionReceipt({ hash: txHash })
-      setState({ status: 'confirmed', hash: txHash })
+      setState({
+        status: 'confirmed',
+        hash: txHash,
+        ...(attestationSlug ? { attestationSlug } : {}),
+      })
     } catch (err) {
       setState({ status: 'failed', error: humanizeError(err) })
     }
-  }, [sendTransaction, to, amountEth])
+  }, [signAndSend, to, amountEth])
 
   const send = useCallback(() => {
     void run()

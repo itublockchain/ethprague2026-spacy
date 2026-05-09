@@ -1,6 +1,5 @@
-import { useCreateWallet, useLoginWithOAuth, usePrivy, useWallets } from '@privy-io/react-auth'
-import type { Hex } from '@spacy/types'
-import { useCallback, useEffect, useRef } from 'react'
+import { type Hex, useWallet } from '@spacy-computer/sdk'
+import { useCallback } from 'react'
 
 interface SpacyUser {
   email: string | undefined
@@ -15,32 +14,20 @@ interface SpacyAuth {
   signOut: () => void
 }
 
+/**
+ * Adapts the @spacy-computer/sdk wallet hook to the existing UI contract.
+ *
+ * Wallet provisioning is handled inside `SpacyProvider` — on first auth it
+ * calls `/wallet/provision` if the user has no wallet yet, so the UI just
+ * watches `wallet` go from `null` → populated. No client-side createWallet
+ * race like the Privy adapter needed.
+ */
 export function useSpacyAuth(): SpacyAuth {
-  const { ready, authenticated, user, logout } = usePrivy()
-  const { initOAuth } = useLoginWithOAuth()
-  const { wallets } = useWallets()
-  const { createWallet } = useCreateWallet()
-  const provisioningRef = useRef(false)
-
-  const embedded = wallets.find((w) => w.walletClientType === 'privy') ?? wallets[0]
-  const walletAddress = embedded ? (embedded.address as Hex) : null
-
-  // If a user is authenticated but no embedded wallet exists yet (e.g. they signed up
-  // before embedded wallets were enabled in the dashboard), provision one explicitly.
-  useEffect(() => {
-    if (!ready || !authenticated) return
-    if (wallets.length > 0) return
-    if (provisioningRef.current) return
-    provisioningRef.current = true
-    createWallet().catch((err: unknown) => {
-      console.error('createWallet failed', err)
-      provisioningRef.current = false
-    })
-  }, [ready, authenticated, wallets.length, createWallet])
+  const { user, wallet, ready, login, logout } = useWallet()
 
   const signIn = useCallback(() => {
-    void initOAuth({ provider: 'google' })
-  }, [initOAuth])
+    login()
+  }, [login])
 
   const signOut = useCallback(() => {
     void logout()
@@ -48,9 +35,9 @@ export function useSpacyAuth(): SpacyAuth {
 
   return {
     ready,
-    authenticated,
-    user: user ? { email: user.email?.address } : null,
-    walletAddress,
+    authenticated: !!user,
+    user: user ? { email: user.email } : null,
+    walletAddress: wallet ? (wallet.address as Hex) : null,
     signIn,
     signOut,
   }

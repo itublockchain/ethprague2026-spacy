@@ -1,4 +1,4 @@
-import type { Hex, SendState } from '@spacy/types'
+import type { Hex, SendState } from '@spacy-computer/sdk'
 import gsap from 'gsap'
 import { useEffect, useRef } from 'react'
 import { DEMO_AMOUNT_ETH, DEMO_RECIPIENT } from '../lib/constants'

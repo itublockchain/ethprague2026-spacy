@@ -1,4 +1,4 @@
-import type { Hex } from '@spacy/types'
+import type { Hex } from '@spacy-computer/sdk'
 import { useState } from 'react'
 
 interface AddressPillProps {

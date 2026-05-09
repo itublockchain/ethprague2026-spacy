@@ -1,4 +1,4 @@
-import type { Hex } from '@spacy/types'
+import type { Hex } from '@spacy-computer/sdk'
 import { useEffect, useState } from 'react'
 import { formatEther } from 'viem'
 import { publicClient } from '../lib/viem'

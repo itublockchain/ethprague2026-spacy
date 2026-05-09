@@ -1,6 +1,6 @@
 import { Float, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import type { SendState } from '@spacy/types'
+import type { SendState } from '@spacy-computer/sdk'
 import gsap from 'gsap'
 import { motion } from 'motion/react'
 import { Suspense, useEffect, useRef, useState } from 'react'

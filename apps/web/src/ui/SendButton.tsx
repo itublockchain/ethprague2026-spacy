@@ -1,4 +1,4 @@
-import type { SendState } from '@spacy/types'
+import type { SendState } from '@spacy-computer/sdk'
 import { AnimatePresence, motion } from 'motion/react'
 import { DEMO_AMOUNT_ETH, SEPOLIA_EXPLORER } from '../lib/constants'
 

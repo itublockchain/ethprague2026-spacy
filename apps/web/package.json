@@ -13,10 +13,9 @@
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.2.0",
     "@gsap/react": "^2.1.2",
-    "@privy-io/react-auth": "^3.0.0",
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.0.0",
-    "@spacy/types": "workspace:*",
+    "@spacy-computer/sdk": "workspace:*",
     "gsap": "^3.13.0",
     "motion": "^12.0.0",
     "react": "^19.0.0",
