@@ -357,7 +357,9 @@ cd packages/contracts && forge test        # Run the SpacyAttestations tests
 - [x] Sepolia testnet deployment
 - [ ] Mainnet — once the KMS quote endpoint stabilizes upstream
 - [ ] Multi-chain: Base, Optimism, Arbitrum (same coordinator, per-chain RPC)
+- [ ] Passkey-based re-auth (WebAuthn) so returning users skip the OAuth round-trip
 - [ ] Account abstraction adapter (ERC-4337) for gasless onboarding
+- [ ] Policy engine inside the TEE — spending caps, allowlists, daily limits enforced server-side
 - [ ] Verifier CLI (`spacy verify <slug>`) bundled with the SDK
 - [ ] Recovery flow: link a second OAuth identity to the same KMS key
 
