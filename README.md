@@ -1,26 +1,8 @@
-<div align="center">
-
-<a href="https://spacy.computer">
-  <img src="./assets/brand/banner.svg" alt="Spacy — sign in with Google, sign across orbit" width="100%"/>
-</a>
-
-<p>
-  <a href="https://www.npmjs.com/package/@spacy-computer/sdk"><img alt="npm" src="https://img.shields.io/npm/v/@spacy-computer/sdk?color=a78bfa&label=%40spacy-computer%2Fsdk&style=for-the-badge"></a>
-  <a href="./LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-a78bfa?style=for-the-badge"></a>
-  <a href="https://sepolia.etherscan.io/address/0xCe31398be624975941e71F94eC6D4c5472449B00"><img alt="Sepolia" src="https://img.shields.io/badge/network-sepolia-7c5cff?style=for-the-badge"></a>
-  <a href="https://x.com/ITUblockchain"><img alt="ETHPrague 2026" src="https://img.shields.io/badge/ETHPrague-2026-0b0717?style=for-the-badge&labelColor=a78bfa"></a>
+<p align="center">
+  <a href="https://spacy.computer">
+    <img src="./assets/brand/banner.svg" alt="Spacy — Privy for the post-quantum world" width="100%"/>
+  </a>
 </p>
-
-<p>
-  <a href="https://spacy.computer">Live demo</a> ·
-  <a href="https://www.npmjs.com/package/@spacy-computer/sdk">SDK</a> ·
-  <a href="./docs/README.md">Docs</a> ·
-  <a href="https://spacy.computer/verify">Verify a receipt</a>
-</p>
-
-</div>
-
----
 
 ## The Problem
 
@@ -35,10 +17,6 @@ There's a third path that's been technically possible for years but practically 
 **Spacy** is an orbital threshold wallet. You sign in with Google — there is no seed phrase. The signing key lives inside an **Intel TDX** KMS exposed by [SpaceComputer Orbitport](https://spacecomputer.io/), the orchestration coordinator runs inside an **AMD SEV-SNP** confidential VM, and every transaction ships with an attestation receipt pinned to **IPFS** with an on-chain pointer event. A satellite-signed entropy sample is mixed in at sign time as a third-party witness that the signing actually happened when the receipt says it did.
 
 No seed phrase. No custodian. No "trust us." **A wallet you don't have to trust because anyone, anywhere can verify it.**
-
-<div align="center">
-  <img src="./assets/brand/trust-chain.svg" alt="Trust chain: Intel TDX → AMD SEV-SNP → SpaceComputer satellite → IPFS → Sepolia" width="100%"/>
-</div>
 
 ## How It Works
 
@@ -72,8 +50,6 @@ sequenceDiagram
 4. **Coordinator pins the receipt to IPFS** and emits `AttestationPublished(wallet, txHash, ipfsCid)` on Sepolia as a censorship-resistant discovery index.
 5. **Verifiers walk the chain offline.** Intel root CA → AMD ARK → SpaceComputer satellite key → IPFS CID → on-chain event. No step requires trusting `spacy.computer`.
 
-<p align="center"><img src="./assets/brand/divider.svg" alt="" width="60%"/></p>
-
 ## Key Features
 
 **🔑 Sign in with Google — No Seed Phrases** — Google OAuth maps to a wallet, the wallet maps to a TDX-resident KMS key. No mnemonic, no recovery sheet, no browser extension — but also not custodial, because the key isn't in our infrastructure either.
@@ -92,8 +68,6 @@ sequenceDiagram
 
 **🛡️ AGPL-3.0** — Every byte that ships in production is open. If we change the deployed coordinator, we ship the change. If we go away, you can run it yourself.
 
-<p align="center"><img src="./assets/brand/divider.svg" alt="" width="60%"/></p>
-
 ## Why Not Just Use Privy or Dynamic?
 
 | | Privy | Dynamic | **Spacy** |
@@ -106,8 +80,6 @@ sequenceDiagram
 | **If the operator goes away** | Wallet bricked | Wallet bricked | **Old receipts still verify; SDK is open and forkable** |
 | **Open source surface** | Partial / proprietary core | Partial / proprietary core | **AGPL — every byte that runs in production** |
 | **Can a regulator force a sign-on-demand?** | Effectively yes | Effectively yes | **No — no plaintext key exists outside TDX** |
-
-<p align="center"><img src="./assets/brand/divider.svg" alt="" width="60%"/></p>
 
 ## Quick Start
 
@@ -186,8 +158,6 @@ curl https://gateway.pinata.cloud/ipfs/<ipfsCid> > receipt.json
 ```
 
 See the [public verification walkthrough](https://spacy.computer/verify) for a guided run-through.
-
-<p align="center"><img src="./assets/brand/divider.svg" alt="" width="60%"/></p>
 
 ## Architecture
 
@@ -375,8 +345,6 @@ bun --filter @spacy-computer/sdk build     # Build the SDK to `dist/`
 
 cd packages/contracts && forge test        # Run the SpacyAttestations tests
 ```
-
-<p align="center"><img src="./assets/brand/divider.svg" alt="" width="60%"/></p>
 
 ## Roadmap
 

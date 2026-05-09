@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Spacy mark">
-  <title>Spacy</title>
-  <rect width="240" height="240" rx="28" fill="#000"/>
-  <g transform="translate(120 120) rotate(-22)" fill="#fff" fill-rule="evenodd">
-    <path d="M -86 -78 L -34 -78 L -34 -58 L -52 -58 L -52 58 L -34 58 L -34 78 L -86 78 L -86 58 L -68 58 L -68 -58 L -86 -58 Z"/>
-    <path d="M 34 -78 L 86 -78 L 86 -58 L 68 -58 L 68 58 L 86 58 L 86 78 L 34 78 L 34 58 L 52 58 L 52 -58 L 34 -58 Z"/>
-    <path d="M -34 -22 L -8 -22 L -8 -2 L 8 -2 L 8 -22 L 34 -22 L 34 22 L 8 22 L 8 2 L -8 2 L -8 22 L -34 22 Z"/>
-  </g>
-</svg>
