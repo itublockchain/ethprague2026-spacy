@@ -13,7 +13,7 @@ export function Landing() {
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-8 px-6">
         <Hook>
-          Signed above the <span className="text-amber">atmosphere</span>.
+          A wallet you don't have to <span className="text-amber">trust</span>.
         </Hook>
         <motion.div
           initial={{ opacity: 0 }}
