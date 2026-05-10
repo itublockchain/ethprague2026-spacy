@@ -37,14 +37,21 @@ export async function signDigestForUser(input: SignDigestInput): Promise<SignDig
 
   const txHash = computeTxHash(input.txMetadata, signature)
 
-  const verifyResult = quoteHex
-    ? verifyTdxQuote(Buffer.from(quoteHex.replace(/^0x/, ''), 'hex'))
-    : { ok: false, reason: 'quote_unavailable', measurement: undefined }
-  if (!verifyResult.ok) {
-    logger.warn(
-      { txHash, reason: verifyResult.reason },
-      'KMS quote verification failed; persisting unverified',
-    )
+  // Three states for the KMS quote:
+  //   - quoteHex empty:                gateway didn't expose it → quoteVerified: null
+  //   - quoteHex present + verifies:   quoteVerified: true
+  //   - quoteHex present + fails:      quoteVerified: false (real attestation failure)
+  let quoteVerified: boolean | null
+  let quoteMeasurement: string | undefined
+  if (!quoteHex) {
+    quoteVerified = null
+  } else {
+    const verifyResult = verifyTdxQuote(Buffer.from(quoteHex.replace(/^0x/, ''), 'hex'))
+    quoteVerified = verifyResult.ok
+    quoteMeasurement = verifyResult.measurement
+    if (!verifyResult.ok) {
+      logger.warn({ txHash, reason: verifyResult.reason }, 'KMS quote verification failed')
+    }
   }
 
   const tx = await prisma.transaction.create({
@@ -60,8 +67,8 @@ export async function signDigestForUser(input: SignDigestInput): Promise<SignDig
   const attestation = await prisma.attestation.create({
     data: {
       txHash: tx.txHash,
-      kmsQuote: { quoteHex, measurement: verifyResult.measurement ?? null },
-      kmsQuoteVerified: verifyResult.ok,
+      kmsQuote: { quoteHex, measurement: quoteMeasurement ?? null },
+      kmsQuoteVerified: quoteVerified ?? false, // db column is non-null bool
       signingEntropyHash: signingWitness.hash,
       signingEntropySig: signingWitness.satelliteSig,
     },
@@ -79,8 +86,8 @@ export async function signDigestForUser(input: SignDigestInput): Promise<SignDig
       signingWitness,
       kmsKeyId: wallet.kmsKeyId,
       kmsQuoteHex: quoteHex,
-      quoteVerified: verifyResult.ok,
-      measurement: verifyResult.measurement,
+      quoteVerified,
+      measurement: quoteMeasurement,
     })
   })
 
@@ -97,7 +104,7 @@ interface FinalizeInput {
   signingWitness: CTrngSample
   kmsKeyId: string
   kmsQuoteHex: string
-  quoteVerified: boolean
+  quoteVerified: boolean | null
   measurement: string | undefined
 }
 
@@ -130,6 +137,7 @@ async function finalizeAttestation(input: FinalizeInput) {
         selfAttestation: {
           reportHex: coordinator.reportHex,
           vlek: coordinator.vlek,
+          ...(coordinator.chipIdHex ? { chipIdHex: coordinator.chipIdHex } : {}),
           measuredBootHash: coordinator.measuredBootHash,
           ec2InstanceId: coordinator.ec2InstanceId ?? '',
           fetchedAt: coordinator.fetchedAt,

@@ -31,8 +31,12 @@ export const attestationReceiptV1Schema = z.object({
   signer: z.object({
     kind: z.literal('spacecomputer-orbitport-kms'),
     keyId: z.string(),
+    // Intel TDX quote returned alongside the signature. The current
+    // Orbitport gateway does not yet expose this on `kms.Sign`; when that
+    // ships the field will populate. Empty string + `quoteVerified: null`
+    // = "not yet retrievable", not "retrieved and invalid".
     quoteHex: z.string(),
-    quoteVerified: z.boolean(),
+    quoteVerified: z.boolean().nullable(),
     measurement: z.string().optional(),
   }),
 
@@ -40,7 +44,12 @@ export const attestationReceiptV1Schema = z.object({
     kind: z.literal('spacy-backend-sev-snp'),
     selfAttestation: z.object({
       reportHex: z.string(),
+      // Full PEM cert chain VCEK -> ASK -> ARK fetched from AMD KDS.
+      // Verifier walks chain offline against bundled AMD root.
       vlek: z.string(),
+      // Hex chip ID extracted from the SEV-SNP report at offset 0x1A0,
+      // useful for verifiers wanting to re-fetch VCEK from KDS themselves.
+      chipIdHex: z.string().optional(),
       measuredBootHash: z.string(),
       ec2InstanceId: z.string(),
       fetchedAt: z.string().datetime(),
@@ -50,6 +59,9 @@ export const attestationReceiptV1Schema = z.object({
   entropy: z.object({
     source: z.string(),
     valueHex: entropyHexSchema,
+    // Satellite signature over the entropy value. Current Orbitport gateway
+    // does not yet expose a signature field on `ctrng.Get`; when that ships
+    // this populates. Empty = "not yet exposed by the API".
     signatureHex: z.string(),
     fetchedAt: z.string().datetime(),
   }),
@@ -78,7 +90,7 @@ export const proofPayloadSchema = z.object({
   ipfsUrl: z.string().nullable(),
   onchainTxHash: z.string().nullable(),
   onchainBlockNumber: z.number().int().nullable(),
-  kmsQuoteVerified: z.boolean(),
+  kmsQuoteVerified: z.boolean().nullable(),
   receipt: attestationReceiptV1Schema.nullable(),
   createdAt: z.string().datetime(),
 })
