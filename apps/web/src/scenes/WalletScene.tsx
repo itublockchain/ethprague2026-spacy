@@ -105,34 +105,49 @@ function transitionDuration(status: SendState['status']): number {
 }
 
 const HEX = '0123456789abcdef'
+const ROWS = 6
+const COLS = 32
+const TICK_MS = 90
+const FLIP_RATE = 0.22
 
-interface ScrambleLine {
-  text: string
-  tone: string
+const TONES = [
+  'text-amber/70',
+  'text-amber/65',
+  'text-aurora/70',
+  'text-amber/65',
+  'text-frost/55',
+  'text-amber/70',
+]
+
+function randomLine(): string {
+  let s = ''
+  for (let i = 0; i < COLS; i++) {
+    s += HEX.charAt(Math.floor(Math.random() * 16))
+  }
+  return s
 }
 
-function generateLines(): ScrambleLine[] {
-  return Array.from({ length: 5 }, () => {
-    const len = 14 + Math.floor(Math.random() * 12)
-    let s = '0x'
-    for (let i = 0; i < len; i++) {
-      s += HEX.charAt(Math.floor(Math.random() * 16))
-    }
-    const roll = Math.random()
-    const tone = roll > 0.85 ? 'text-aurora/70' : roll > 0.7 ? 'text-frost/55' : 'text-amber/65'
-    return { text: s, tone }
-  })
+function shimmerLine(line: string): string {
+  let s = ''
+  for (let i = 0; i < line.length; i++) {
+    s += Math.random() < FLIP_RATE ? HEX.charAt(Math.floor(Math.random() * 16)) : line.charAt(i)
+  }
+  return s
+}
+
+function makeGrid(): string[] {
+  return Array.from({ length: ROWS }, randomLine)
 }
 
 function ScrambleOverlay({ active }: { active: boolean }) {
-  const [lines, setLines] = useState<ScrambleLine[]>(generateLines)
+  const [grid, setGrid] = useState<string[]>(makeGrid)
 
   useEffect(() => {
-    setLines(generateLines())
+    setGrid(makeGrid())
     if (!active) return
     const id = setInterval(() => {
-      setLines(generateLines())
-    }, 350)
+      setGrid((g) => g.map(shimmerLine))
+    }, TICK_MS)
     return () => clearInterval(id)
   }, [active])
 
@@ -144,9 +159,14 @@ function ScrambleOverlay({ active }: { active: boolean }) {
       transition={{ duration: 1.2, ease: 'easeInOut' }}
       aria-hidden="true"
     >
-      {lines.map((line) => (
-        <span key={line.text} className={line.tone} style={{ letterSpacing: '0.06em' }}>
-          {line.text}
+      {grid.map((line, i) => (
+        <span
+          // biome-ignore lint/suspicious/noArrayIndexKey: stable row count
+          key={i}
+          className={TONES[i % TONES.length]}
+          style={{ letterSpacing: '0.18em', whiteSpace: 'pre' }}
+        >
+          {line}
         </span>
       ))}
     </motion.div>
